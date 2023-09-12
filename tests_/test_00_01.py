@@ -4,29 +4,47 @@ from selenium import webdriver
 
 from pages_.logIn_.logInPage import LogIn
 from pages_.naviganBar_.navigationBar import NavigationBar
+from common_.utilities_ import customLogger
+
+from selenium.webdriver.support.events import EventFiringWebDriver
+from common_.utilities_.customListener import CustomListener
+
+from tests_.testData_.testData import validClientUser, invalidClientUser, signInURL
 
 class LogInTest(unittest.TestCase):
     def setUp(self) -> None:
-        self.driver = webdriver.Chrome()
-        self.driver.implicitly_wait(10)
+        customLogger.loger("INFO", "Test Started")
+        self.coreDriver = webdriver.Chrome()
+        self.driver = EventFiringWebDriver(self.coreDriver, CustomListener())
+        self.driver.implicitly_wait(6)
         self.driver.delete_all_cookies()
         self.driver.maximize_window()
-        self.driver.get("https://www.amazon.com/ap/signin?openid.pape.max_auth_age=0&openid.return_to=https%3A%2F%2Fwww.amazon.com%2Fgp%2Fcss%2Fhomepage.html%2Fref%3Dnav_ya_signin&openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.assoc_handle=usflex&openid.mode=checkid_setup&openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0")
+        self.driver.get(signInURL)
+
+    def test_invalid_login(self):
+        loginPageObj = LogIn(self.driver)
+
+        loginPageObj.fill_login_field(invalidClientUser.login)
+        loginPageObj.click_to_continue_button()
+        loginPageObj.fill_password_field(invalidClientUser.password)
+        time.sleep(5)
+        loginPageObj.click_to_sign_in_button()
 
     def test_valid_login(self):
         loginPageObj = LogIn(self.driver)
 
-        loginPageObj.fill_login_field("test_armenia_99@mail.ru")
+        loginPageObj.fill_login_field(validClientUser.login)
         loginPageObj.click_to_continue_button()
-        loginPageObj.fill_password_field("anunazganun321")
+        loginPageObj.fill_password_field(validClientUser.password)
         time.sleep(5)
         loginPageObj.click_to_sign_in_button()
 
         #Assertion
         navigationBarObj = NavigationBar(self.driver)
-        self.assertEqual(navigationBarObj.get_user_name(), "Fname")
+        self.assertEqual(navigationBarObj.get_user_name(), validClientUser.name)
 
     def tearDown(self) -> None:
         time.sleep(17)
         self.driver.close()
+        customLogger.loger("INFO", "Test Finished")
 
